@@ -1,6 +1,6 @@
 #include "musicdata.h"
 
-sequence_t voiceOne[] =
+uint16_t voiceOne[] =
 {
     INSTRUMENT(SQUARE)
     TEMPO(56)
@@ -148,7 +148,7 @@ sequence_t voiceOne[] =
 const uint16_t voiceOneLength =
 sizeof(voiceOne)/sizeof(voiceOne[0]);
 
-sequence_t  voiceTwo[] =
+uint16_t voiceTwo[] =
 {
     INSTRUMENT(SQUARE)
     NOTE(B3*2, 24, 4) SILENCE(4)
@@ -264,7 +264,7 @@ sequence_t  voiceTwo[] =
 const uint16_t voiceTwoLength =
 sizeof(voiceTwo)/sizeof(voiceTwo[0]);
 
-sequence_t voiceThree[] =
+uint16_t voiceThree[] =
 {
     INSTRUMENT(SQUARE)
     TEMPO(56)

@@ -1,25 +1,22 @@
-#include <avr/io.h>
-#include "notationdefines.h"
-#include "../notes.h"
-
-uint8_t voiceOne[] =
+#include "musicdata.h"
+uint16_t voiceOne[] =
 {
     INSTRUMENT(SQUARE)
-    NOTE(E3, 8, 8)
-    NOTE(F3, 8, 8)
+    NOTE(C3, 8, 256)
+    NOTE(G3, 8, 256)
 };
-uint8_t voiceTwo[] =
+uint16_t voiceTwo[] =
 {
     INSTRUMENT(SQUARE)
-    NOTE(C3, 8, 8)
-    NOTE(D3, 8, 8)
+    NOTE(C3, 8, 256)
+    NOTE(G3, 8, 256)
 };
-uint8_t voiceThree[] =
+uint16_t voiceThree[] =
 {
     INSTRUMENT(SQUARE)
-    NOTE(E3, 8, 8)
-    NOTE(F3, 8, 8)
+    NOTE(C3, 8, 256)
+    NOTE(G3, 8, 256)
 };
-uint16_t voiceOneLength = sizeof(voiceOne) / sizeof(voiceOne[0]);
-uint16_t voiceTwoLength = sizeof(voiceTwo) / sizeof(voiceTwo[0]);
-uint16_t voiceThreeLength = sizeof(voiceThree) / sizeof(voiceThree[0]);
+const uint16_t voiceOneLength = sizeof(voiceOne) / sizeof(voiceOne[0]);
+const uint16_t voiceTwoLength = sizeof(voiceTwo) / sizeof(voiceTwo[0]);
+const uint16_t voiceThreeLength = sizeof(voiceThree) / sizeof(voiceThree[0]);

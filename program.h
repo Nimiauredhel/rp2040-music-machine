@@ -20,7 +20,7 @@ static uint16_t readAnalogInput(void);
 
 static void initializeChannel(channel *channel, uint8_t device);
 static channel* initializeChannels(uint8_t *numChannels);
-static void initializeTrack(track *track, channel *channel, sequence_t *sequence, uint16_t sequenceLength);
+static void initializeTrack(track *track, channel *channel,uint16_t *sequence, uint16_t sequenceLength);
 static track* initializeTracks(uint8_t *numTracks, channel* channels);
 static void readTrack(track *target);
 static void readTracks(const uint8_t numTracks, track *tracks);

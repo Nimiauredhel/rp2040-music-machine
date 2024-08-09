@@ -10,8 +10,6 @@
 #define BUILTIN_LED_ON SET_BIT(PORTB, 5)
 #define BUILTIN_LED_OFF UNSET_BIT(PORTB, 5)
 
-typedef const uint16_t sequence_t;
-
 typedef struct state
 {
     uint16_t volume;
@@ -41,7 +39,7 @@ typedef struct track
     // target channel associated with this track
     channel *channel;
     // the sequence of commands associated with this track
-    const sequence_t *sequence;
+    const uint16_t *sequence;
     // the length of the command sequence
     uint16_t sLength;
     // the current position of the command sequence

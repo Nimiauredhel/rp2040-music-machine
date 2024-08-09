@@ -129,7 +129,7 @@ static channel* initializeChannels(uint8_t *numChannels)
     return channels;
 }
 
-static void initializeTrack(track *track, channel *channel, sequence_t *sequence, uint16_t sequenceLength)
+static void initializeTrack(track *track, channel *channel, uint16_t *sequence, const uint16_t sequenceLength)
 {
     track->channel = channel;
     track->sequence = sequence;
@@ -162,7 +162,7 @@ static void readTrack(track *target)
         return;
     }
 
-    sequence_t *tSequence = target->sequence;
+    const uint16_t *tSequence = target->sequence;
     uint16_t position = target->sPosition;
     uint8_t code = tSequence[position];
     channel *tChannel = target->channel;
