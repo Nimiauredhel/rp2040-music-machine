@@ -6,4 +6,5 @@
 *.hex
 compile_commands.json
 
+build/
 .cache/
