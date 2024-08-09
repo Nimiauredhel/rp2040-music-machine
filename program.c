@@ -25,10 +25,9 @@ static void instRegular(channel *channel, state *state)
         channel->nextPitchIndex = 0;
     }
 
-    uint8_t finalTone = ((channel->currentTone)*(state->volume))/1024;
+    uint8_t finalTone = ((channel->currentTone)*5*(state->volume))/1024;
     pwm_set_chan_level(channel->device, PWM_CHAN_A, finalTone);
-    pwm_set_chan_level(channel->device, PWM_CHAN_B, finalTone);
-    pwm_set_wrap(channel->device, channel->currentPitches[channel->nextPitchIndex]);
+    pwm_set_wrap(channel->device, channel->currentPitches[channel->nextPitchIndex]*5);
 
     channel->polyCycleCounter++;
 
@@ -56,6 +55,7 @@ static void initializePWMSlices(uint8_t first, uint8_t count, uint8_t intdiv, ui
     for (int i = first; i < count; i++)
     {
         pwm_set_clkdiv_int_frac(i, intdiv, fracdiv);
+        pwm_set_phase_correct(i, true);
     }
 }
 static void setPWMSlices(uint8_t first, uint8_t count, uint8_t value)
@@ -97,7 +97,7 @@ static uint16_t readAnalogInput()
 
     return ADC;
 */
-    return 512;
+    return 1023;
 }
 
 static void initializeChannel(channel *channel, uint8_t device)
@@ -294,7 +294,7 @@ int main(void)
     state *state = malloc(sizeof(struct state));
     composition *composition = malloc(sizeof(struct composition));
 
-    initializePWMSlices(0, 5, 255, 0);
+    initializePWMSlices(0, 5, 255, 15);
     setPWMSlices(0, 5, true);
     setPWMPorts(0, 10);
 
