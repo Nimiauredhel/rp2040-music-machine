@@ -1,8 +1,8 @@
+#include <stdlib.h>
+#include <stdint.h>
+
 #ifndef COMMON_H
 #define COMMON_H
-
-#include <avr/io.h>
-#include <avr/pgmspace.h>
 
 #define GET_BIT(REG, BIT) (REG & (1 << BIT))
 #define SET_BIT(REG, BIT) (REG |= (1 << BIT))
@@ -10,33 +10,18 @@
 #define BUILTIN_LED_ON SET_BIT(PORTB, 5)
 #define BUILTIN_LED_OFF UNSET_BIT(PORTB, 5)
 
-typedef const PROGMEM uint16_t sequence_t;
-
-typedef struct variableSizePointer
-{
-    uint8_t pointerSize;
-    union pointer
-    {
-        volatile uint8_t *eight;
-        volatile uint16_t *sixteen;
-    } pointer;
-} variableSizePointer;
+typedef const uint16_t sequence_t;
 
 typedef struct state
 {
     uint16_t volume;
 } state;
 
-typedef struct device
-{
-    variableSizePointer pitch;
-    variableSizePointer width;
-
-} device;
-
 typedef struct channel
 {
-    device *device;
+    // no need for complicated device struct on pico -
+    // this is simply the pwm slice number
+    uint8_t device;
     // the number of pitches represented by this channel
     uint8_t currentPitchCount;
     // array of pitches represented by this channel
@@ -69,17 +54,13 @@ typedef struct track
 
 typedef struct composition
 {
-    uint8_t numDevices;
     uint8_t numChannels;
     uint8_t numTracks;
 
-    device *devices;
     channel *channels;
     track *tracks;
 } composition;
 
-uint16_t VSP_Read(variableSizePointer *target);
-void VSP_Write(uint16_t value, variableSizePointer *target);
 typedef void(*instrument)(channel *channel, state *state);
 
 #endif // COMMON_H

@@ -1,15 +1,16 @@
 #include <stdlib.h>
-#include <util/delay.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
+#include <stdint.h>
+#include "pico/stdlib.h"
+#include "hardware/pwm.h"
 #include "program.h"
-#include "common.c"
+#include "common.h"
 #include "music/musicdata.c"
 
 static uint64_t sleepUnit = 512;
 static uint8_t rhythmUnit = 255; // also set dynamically by tracks
 
-#define SLEEP_DELAY _delay_us(sleepUnit);
+#define MINIMAL_DELAY sleep_us(10);
+#define SLEEP_DELAY sleep_us(sleepUnit);
 
 static void instSilence(channel *channel, state *state)
 {
@@ -25,9 +26,9 @@ static void instRegular(channel *channel, state *state)
     }
 
     uint8_t finalTone = ((channel->currentTone)*(state->volume))/1024;
-    VSP_Write(finalTone, &channel->device->width);
-    VSP_Write(channel->currentPitches[channel->nextPitchIndex], 
-            &channel->device->pitch);
+    pwm_set_chan_level(channel->device, PWM_CHAN_A, finalTone);
+    pwm_set_chan_level(channel->device, PWM_CHAN_B, finalTone);
+    pwm_set_wrap(channel->device, channel->currentPitches[channel->nextPitchIndex]);
 
     channel->polyCycleCounter++;
 
@@ -50,134 +51,56 @@ const instrument instruments[] =
     instSilence, instRegular
 };
 
-// timer counter 0
-static void initializeTimerCounter0(void)
+static void initializePWMSlices(uint8_t first, uint8_t count, uint8_t intdiv, uint8_t fracdiv)
 {
-    TCCR0A = (1 << COM0A1) | (1 << COM0B1) | (1 << WGM00);
-    TCCR0B = (1 << WGM02); 
+    for (int i = first; i < count; i++)
+    {
+        pwm_set_clkdiv_int_frac(i, intdiv, fracdiv);
+    }
 }
-static void startTimerCounter0(void)
+static void setPWMSlices(uint8_t first, uint8_t count, uint8_t value)
 {
-    // 1 0 0 - clk/256
-    //SET_BIT(TCCR0B, CS00);
-    //SET_BIT(TCCR0B, CS01);
-    SET_BIT(TCCR0B, CS02);
+    for (int i = first; i < count; i++)
+    {
+        pwm_set_enabled(i, value);
+    }
 }
-static void stopTimerCounter0(void)
+static void setPWMPorts(uint8_t first, uint8_t count)
 {
-    //UNSET_BIT(TCCR0B, CS00);
-    //UNSET_BIT(TCCR0B, CS01);
-    UNSET_BIT(TCCR0B, CS02);
-}
-// timer counter 1
-static  void initializeTimerCounter1(void)
-{
-    TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM10);
-    TCCR1B = (1 << WGM13); 
-}
-static void startTimerCounter1(void)
-{
-    // 1 0 0 - clk/256
-    //SET_BIT(TCCR1B, CS10);
-    //SET_BIT(TCCR1B, CS11);
-    SET_BIT(TCCR1B, CS12);
-}
-static void stopTimerCounter1(void)
-{
-    //UNSET_BIT(TCCR1B, CS10);
-    //UNSET_BIT(TCCR1B, CS11);
-    UNSET_BIT(TCCR1B, CS12);
-}
-// timer counter 2
-static void initializeTimerCounter2(void)
-{
-    TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM20);
-    TCCR2B = (1 << WGM22); 
-}
-static void startTimerCounter2(void)
-{
-    // 1 0 0 - clk/256
-    //SET_BIT(TCCR2B, CS20);
-    SET_BIT(TCCR2B, CS21);
-    SET_BIT(TCCR2B, CS22);
-}
-static void stopTimerCounter2(void)
-{
-    //UNSET_BIT(TCCR2B, CS20);
-    UNSET_BIT(TCCR2B, CS21);
-    UNSET_BIT(TCCR2B, CS22);
-}
-
-static void initializePortB(void)
-{
-    DDRB = 0;
-    SET_BIT(DDRB, DDB1);
-    SET_BIT(DDRB, DDB2);
-    SET_BIT(DDRB, DDB3);
-    SET_BIT(DDRB, DDB5);
-}
-
-static void initializePortD(void)
-{
-    DDRD = 0;
-    SET_BIT(DDRD, DDD3);
-    SET_BIT(DDRD, DDD5);
-    SET_BIT(DDRD, DDD6);
+    for (int i = first; i < count; i++)
+    {
+        gpio_set_function(i, GPIO_FUNC_PWM);
+    }
 }
 
 static void initializeAnalogInput(void)
 {
+/*
     ADMUX = 0;
     ADCSRA = 0;
     // reference voltage is vcc (5v?), 10 bit mode, using pin A0
     ADMUX |= (1 << REFS0) | (0 << ADLAR);
     // enable ADC module, set prescaler divisor value to 128
     ADCSRA |= (1 << ADEN) | (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2);
+*/
 }
 
 static uint16_t readAnalogInput()
 {
+/*
     SET_BIT(ADCSRA, ADSC);
 
     while (GET_BIT(ADCSRA, ADSC) == 1)
     {
-        _delay_us(10);
+        MINIMAL_DELAY
     }
 
     return ADC;
-}
-static void initializeDevice8(device *device, volatile uint8_t *pitch, volatile uint8_t *width)
-{
-    device->pitch.pointerSize = 8;
-    device->width.pointerSize = 8;
-    device->pitch.pointer.eight = pitch;
-    device->width.pointer.eight = width;
+*/
+    return 512;
 }
 
-static void initializeDevice16(device *device, volatile uint16_t *pitch, volatile uint16_t *width)
-{
-    device->pitch.pointerSize = 16;
-    device->width.pointerSize = 16;
-    device->pitch.pointer.sixteen = pitch;
-    device->width.pointer.sixteen = width;
-}
-
-static device* initializeDevices(uint8_t *numDevices)
-{
-    *numDevices = 3;
-    device *devices = malloc((*numDevices) * sizeof(device));
-
-    // timer counter 0
-    initializeDevice8(&devices[0], &OCR0A, &OCR0B);
-    // timer counter 1
-    initializeDevice16(&devices[1], &OCR1A, &OCR1B);
-    // timer counter 2
-    initializeDevice8(&devices[2], &OCR2A, &OCR2B);
-
-    return devices;
-}
-
-static void initializeChannel(channel *channel, device *device)
+static void initializeChannel(channel *channel, uint8_t device)
 {
     channel->device = device;
     channel->currentTone = 0;
@@ -192,14 +115,16 @@ static void initializeChannel(channel *channel, device *device)
     channel->instrument = instruments[0];
 }
 
-static channel* initializeChannels(uint8_t *numChannels, device *devices)
+static channel* initializeChannels(uint8_t *numChannels)
 {
     *numChannels = 3;
     channel *channels = malloc((*numChannels) * sizeof(channel));
 
     for (int i = 0; i < *numChannels; i++)
     {
-        initializeChannel(&channels[i], &devices[i]);
+        // add 2 for first port test, use whole range later
+        // TODO: remove +2
+        initializeChannel(&channels[i], i + 2);
     }
     return channels;
 }
@@ -217,9 +142,9 @@ static track* initializeTracks(uint8_t *numTracks, channel* channels)
 {
     *numTracks = 3;
     track *tracks = malloc((*numTracks) * sizeof(track));
-    initializeTrack(&tracks[0], &channels[0], voiceOne, pgm_read_word(&voiceOneLength));
-    initializeTrack(&tracks[1], &channels[1], voiceTwo, pgm_read_word(&voiceTwoLength));
-    initializeTrack(&tracks[2], &channels[2], voiceThree, pgm_read_word(&voiceThreeLength));
+    initializeTrack(&tracks[0], &channels[0], voiceOne, voiceOneLength);
+    initializeTrack(&tracks[1], &channels[1], voiceTwo, voiceTwoLength);
+    initializeTrack(&tracks[2], &channels[2], voiceThree, voiceThreeLength);
     return tracks;
 }
 
@@ -239,7 +164,7 @@ static void readTrack(track *target)
 
     sequence_t *tSequence = target->sequence;
     uint16_t position = target->sPosition;
-    uint8_t code = pgm_read_byte(&tSequence[position]);
+    uint8_t code = tSequence[position];
     channel *tChannel = target->channel;
 
     switch (code) 
@@ -247,7 +172,7 @@ static void readTrack(track *target)
         case 0:
             // sleep for duration
             target->remainingSleepTime =
-                pgm_read_byte(&tSequence[position+1]) * sleepUnit * rhythmUnit;
+                tSequence[position+1] * sleepUnit * rhythmUnit;
             target->sPosition = position+2;
             break;
         case 1:
@@ -257,12 +182,12 @@ static void readTrack(track *target)
             // Set pitches
             // pitches + sleep combo to save space
             target->remainingSleepTime =
-                pgm_read_byte(&tSequence[position+code+1]) * sleepUnit * rhythmUnit;
+                tSequence[position+code+1] * sleepUnit * rhythmUnit;
             tChannel->currentPitchCount = code;
             target->sPosition = position + code + 2;
             for (int i = 0; i < code; i++)
             {
-                tChannel->currentPitches[i] = pgm_read_word(&tSequence[position+i+1]);
+                tChannel->currentPitches[i] = tSequence[position+i+1];
             }
             tChannel->nextPitchIndex = 0;
             break;
@@ -273,33 +198,33 @@ static void readTrack(track *target)
             code -= 10;
             // Set pitches
             // pitches + sleep + volume combo to save space
-            target->channel->currentTone = pgm_read_byte(&tSequence[position+code+1]);
+            target->channel->currentTone = tSequence[position+code+1];
             target->remainingSleepTime =
-                pgm_read_byte(&tSequence[position+code+2]) * sleepUnit * rhythmUnit;
+                tSequence[position+code+2] * sleepUnit * rhythmUnit;
             target->sPosition = position + code + 3;
             tChannel->currentPitchCount = code;
             for (int i = 0; i < code; i++)
             {
-                tChannel->currentPitches[i] = pgm_read_word(&tSequence[position+i+1]);
+                tChannel->currentPitches[i] = tSequence[position+i+1];
             }
             tChannel->nextPitchIndex = 0;
             break;
         case 5:
             // Set "volume" (voltage)
             tChannel->currentTone =
-                pgm_read_byte(&tSequence[position+1]);
+                tSequence[position+1];
             target->sPosition = position+2;
             break;
         case 6:
             // Set instrument function
             tChannel->instrument =
-                instruments[pgm_read_byte(&tSequence[position+1])];
+                instruments[tSequence[position+1]];
             target->sPosition = position+2;
             break;
         case 7:
             // Set rhythm unit (tempo)
             rhythmUnit =
-                pgm_read_byte(&tSequence[position+1]);
+                tSequence[position+1];
             target->sPosition = position+2;
             break;
         case 8:
@@ -312,25 +237,19 @@ static void readTrack(track *target)
             else
             {
                 target->jPosition = position;
-                target->sPosition = position-(pgm_read_byte(&tSequence[position+1]));
+                target->sPosition = position-(tSequence[position+1]);
             }
             break;
         case 9:
             // volume + sleep
             tChannel->currentTone =
-                pgm_read_byte(&tSequence[position+1]);
+                tSequence[position+1];
             target->remainingSleepTime =
-                pgm_read_byte(&tSequence[position+2]) * sleepUnit * rhythmUnit;
+                tSequence[position+2] * sleepUnit * rhythmUnit;
             target->sPosition = position+3;
             break;
         default:
-            /*for (int i = 0; i < code; i++)
-            {
-                SET_BIT(PORTB, 5);
-                _delay_ms(500);
-                UNSET_BIT(PORTB, 5);
-                _delay_ms(500);
-            }*/
+            // TODO: add some sort of warning behavior
         break;
     }
 }
@@ -375,21 +294,14 @@ int main(void)
     state *state = malloc(sizeof(struct state));
     composition *composition = malloc(sizeof(struct composition));
 
-    initializePortB();
-    initializePortD();
+    initializePWMSlices(0, 5, 255, 0);
+    setPWMSlices(0, 5, true);
+    setPWMPorts(0, 10);
+
     initializeAnalogInput();
-    initializeTimerCounter0();
-    initializeTimerCounter1();
-    initializeTimerCounter2();
 
-    startTimerCounter0();
-    startTimerCounter1();
-    startTimerCounter2();
-
-    // initialize the devices - interfaces to audio emitting hardware
-    composition->devices = initializeDevices(&composition->numDevices);
     // initialize the channels - device usage & state management
-    composition->channels = initializeChannels(&composition->numChannels, composition->devices);
+    composition->channels = initializeChannels(&composition->numChannels);
     // initialize the tracks - parallel streams of commands to the channels
     composition->tracks = initializeTracks(&composition->numTracks, composition->channels);
 

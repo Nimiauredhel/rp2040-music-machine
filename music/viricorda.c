@@ -145,7 +145,7 @@ sequence_t voiceOne[] =
     NOTE(G4, 48, 12) SILENCE(4)
     JUMPBACK(7)
 };
-const PROGMEM uint16_t voiceOneLength =
+const uint16_t voiceOneLength =
 sizeof(voiceOne)/sizeof(voiceOne[0]);
 
 sequence_t  voiceTwo[] =
@@ -261,7 +261,7 @@ sequence_t  voiceTwo[] =
     NOTE(G3*4, 32, 12) SILENCE(4)
     JUMPBACK(7)
 };
-const PROGMEM uint16_t voiceTwoLength =
+const uint16_t voiceTwoLength =
 sizeof(voiceTwo)/sizeof(voiceTwo[0]);
 
 sequence_t voiceThree[] =
@@ -360,5 +360,5 @@ sequence_t voiceThree[] =
     NOTE3(A3, D4, Gb4, 9, 24)
     NOTE4(G3, B3, D4, G4, 10, 32)
 };
-const PROGMEM uint16_t voiceThreeLength =
+const uint16_t voiceThreeLength =
 sizeof(voiceThree)/sizeof(voiceThree[0]);

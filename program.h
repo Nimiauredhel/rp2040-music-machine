@@ -1,35 +1,25 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include <util/delay.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include "pico/stdlib.h"
+#include "hardware/pwm.h"
 #include "common.h"
 #include "music/musicdata.h"
 
 static void instSilence(channel *channel, state *state);
 static void instRegular(channel *channel, state *state);
 
-static void initializeTimerCounter0(void);
-static void initializeTimerCounter1(void);
-static void initializeTimerCounter2(void);
-static void startTimerCounter0(void);
-static void startTimerCounter1(void);
-static void startTimerCounter2(void);
-static void stopTimerCounter0(void);
-static void stopTimerCounter1(void);
-static void stopTimerCounter2(void);
+static void initializePWMSlices(uint8_t first, uint8_t count, uint8_t intdiv, uint8_t fracdiv);
+static void setPWMSlices(uint8_t first, uint8_t count, uint8_t value);
+static void setPWMPorts(uint8_t first, uint8_t count);
 
-static void initializePortB(void);
-static void initializePortD(void);
 static void initializeAnalogInput(void);
 static uint16_t readAnalogInput(void);
 
-static void initializeDevice8(device *device, volatile uint8_t *pitch, volatile uint8_t *width);
-static void initializeDevice16(device *device, volatile uint16_t *pitch, volatile uint16_t *width);
-static device* initializeDevices(uint8_t *numDevices);
-static void initializeChannel(channel *channel, device *device);
-static channel* initializeChannels(uint8_t *numChannels, device *devices);
+static void initializeChannel(channel *channel, uint8_t device);
+static channel* initializeChannels(uint8_t *numChannels);
 static void initializeTrack(track *track, channel *channel, sequence_t *sequence, uint16_t sequenceLength);
 static track* initializeTracks(uint8_t *numTracks, channel* channels);
 static void readTrack(track *target);
