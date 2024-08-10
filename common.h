@@ -12,7 +12,7 @@
 
 typedef struct state
 {
-    uint16_t volume;
+    float volume;
 } state;
 
 typedef struct channel
@@ -27,9 +27,9 @@ typedef struct channel
     // index of next pitch to sound on this channel
     uint8_t nextPitchIndex;
     // current "tone" (voltage?) set on this channel
-    uint8_t currentTone;
-    uint8_t polyCycleThreshold;
-    uint8_t polyCycleCounter;
+    uint16_t currentTone;
+    uint16_t polyCycleThreshold;
+    uint16_t polyCycleCounter;
     // the "instrument" function assigned to this channel, controlling the waveform etc.
     void (*instrument)(struct channel *channel, state *state);
 } channel;

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
+#include "hardware/adc.h"
 #include "common.h"
 #include "music/musicdata.h"
 
@@ -16,7 +17,7 @@ static void setPWMSlices(uint8_t first, uint8_t count, uint8_t value);
 static void setPWMPorts(uint8_t first, uint8_t count);
 
 static void initializeAnalogInput(void);
-static uint16_t readAnalogInput(void);
+static float readAnalogInput(void);
 
 static void initializeChannel(channel *channel, uint8_t device);
 static channel* initializeChannels(uint8_t *numChannels);

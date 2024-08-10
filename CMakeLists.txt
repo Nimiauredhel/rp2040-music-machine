@@ -18,7 +18,7 @@ add_executable(program
 )
 
 # pull in out pico_stdlib which pulls in common-
-target_link_libraries(program pico_stdlib pico_malloc hardware_pwm)
+target_link_libraries(program pico_stdlib pico_malloc hardware_pwm hardware_adc)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(program)

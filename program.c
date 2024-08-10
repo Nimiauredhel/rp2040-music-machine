@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
+#include "hardware/adc.h"
 #include "program.h"
 #include "common.h"
 #include "music/musicdata.c"
@@ -25,9 +26,10 @@ static void instRegular(channel *channel, state *state)
         channel->nextPitchIndex = 0;
     }
 
-    uint8_t finalTone = ((channel->currentTone)*5*(state->volume))/1024;
+    uint16_t pitch = channel->currentPitches[channel->nextPitchIndex];
+    pwm_set_wrap(channel->device, pitch);
+    uint16_t finalTone = UINT16_MAX*(float)(channel->currentTone/200.0)*(state->volume);
     pwm_set_chan_level(channel->device, PWM_CHAN_A, finalTone);
-    pwm_set_wrap(channel->device, channel->currentPitches[channel->nextPitchIndex]);
 
     channel->polyCycleCounter++;
 
@@ -75,29 +77,14 @@ static void setPWMPorts(uint8_t first, uint8_t count)
 
 static void initializeAnalogInput(void)
 {
-/*
-    ADMUX = 0;
-    ADCSRA = 0;
-    // reference voltage is vcc (5v?), 10 bit mode, using pin A0
-    ADMUX |= (1 << REFS0) | (0 << ADLAR);
-    // enable ADC module, set prescaler divisor value to 128
-    ADCSRA |= (1 << ADEN) | (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2);
-*/
+    adc_init();
+    adc_gpio_init(29);
+    adc_select_input(3);
 }
 
-static uint16_t readAnalogInput()
+static float readAnalogInput()
 {
-/*
-    SET_BIT(ADCSRA, ADSC);
-
-    while (GET_BIT(ADCSRA, ADSC) == 1)
-    {
-        MINIMAL_DELAY
-    }
-
-    return ADC;
-*/
-    return 1023;
+    return adc_read()/4095.0;
 }
 
 static void initializeChannel(channel *channel, uint8_t device)
@@ -304,6 +291,8 @@ int main(void)
     composition->channels = initializeChannels(&composition->numChannels);
     // initialize the tracks - parallel streams of commands to the channels
     composition->tracks = initializeTracks(&composition->numTracks, composition->channels);
+
+    sleep_ms(2000);
 
     for(;;)
     {
