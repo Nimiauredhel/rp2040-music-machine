@@ -27,7 +27,7 @@ static void instRegular(channel *channel, state *state)
 
     uint8_t finalTone = ((channel->currentTone)*5*(state->volume))/1024;
     pwm_set_chan_level(channel->device, PWM_CHAN_A, finalTone);
-    pwm_set_wrap(channel->device, channel->currentPitches[channel->nextPitchIndex]*5);
+    pwm_set_wrap(channel->device, channel->currentPitches[channel->nextPitchIndex]);
 
     channel->polyCycleCounter++;
 
