@@ -14,16 +14,16 @@
 #define PITCH2S(x, y, s) 2, x, y, s,
 #define PITCH3S(x, y, z, s) 3, x, y, z, s,
 #define PITCH4S(x, y, z, w, s) 4, x, y, z, w, s,
-#define VOLUME(x) 5, x,
+#define VOLUME(x) 5, (x),
 #define INSTRUMENT(x) 6, x,
 #define TEMPO(x) 7, x,
 #define JUMPBACK(x) 8, x,
-#define VOLUMES(x, s) 9, x, s,
+#define VOLUMES(x, s) 9, (x), s,
 
-#define NOTE(x, t, sl) 11, x, t, sl,
-#define NOTE2(x, y, t, sl) 12, x, y, t, sl,
-#define NOTE3(x, y, z, t, sl) 13, x, y, z, t, sl,
-#define NOTE4(x, y, z, w, t, sl) 14, x, y, z, w, t, sl,
+#define NOTE(x, t, sl) 11, x, (t), sl,
+#define NOTE2(x, y, t, sl) 12, x, y, (t), sl,
+#define NOTE3(x, y, z, t, sl) 13, x, y, z, (t), sl,
+#define NOTE4(x, y, z, w, t, sl) 14, x, y, z, w, (t), sl,
 
 #define SILENCE(s) VOLUMES(0, s)
 

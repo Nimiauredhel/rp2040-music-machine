@@ -28,8 +28,8 @@ static void instRegular(channel *channel, state *state)
 
     uint16_t pitch = channel->currentPitches[channel->nextPitchIndex];
     pwm_set_wrap(channel->device, pitch);
-    uint16_t finalTone = UINT16_MAX*(float)(channel->currentTone/200.0)*(state->volume);
-    pwm_set_chan_level(channel->device, PWM_CHAN_A, finalTone);
+    uint16_t finalTone = (channel->currentTone)*(state->volume);
+    pwm_set_both_levels(channel->device, finalTone, finalTone);
 
     channel->polyCycleCounter++;
 
@@ -84,7 +84,8 @@ static void initializeAnalogInput(void)
 
 static float readAnalogInput()
 {
-    return adc_read()/4095.0;
+    static const float conversion_factor = 3.3f / (1 << 12);
+    return adc_read()*conversion_factor;
 }
 
 static void initializeChannel(channel *channel, uint8_t device)
@@ -285,18 +286,22 @@ int main(void)
     setPWMSlices(0, 5, true);
     setPWMPorts(0, 10);
 
-    initializeAnalogInput();
+    // skipping ADC for now
+    //initializeAnalogInput();
 
     // initialize the channels - device usage & state management
     composition->channels = initializeChannels(&composition->numChannels);
     // initialize the tracks - parallel streams of commands to the channels
     composition->tracks = initializeTracks(&composition->numTracks, composition->channels);
 
-    sleep_ms(2000);
+    sleep_ms(500);
+    // giving up on ADC volume for now -
+    // clearly not as straightforward as it was in the atmega,
+    // and it wasn't the right way anyway
+    state->volume = 1.0;
 
     for(;;)
     {
-        state->volume = readAnalogInput();
         readTracks(composition->numTracks, composition->tracks);
         playChannels(composition->numChannels, composition->channels, state);
         SLEEP_DELAY
