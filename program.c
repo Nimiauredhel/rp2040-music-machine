@@ -3,15 +3,65 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include "hardware/adc.h"
-#include "program.h"
 #include "common.h"
 #include "music/musicdata.c"
 
-static uint64_t sleepUnit = 512;
-static uint8_t rhythmUnit = 255; // also set dynamically by tracks
-
 #define MINIMAL_DELAY sleep_us(10);
 #define SLEEP_DELAY sleep_us(sleepUnit);
+
+static void instSilence(channel *channel, state *state);
+static void instRegular(channel *channel, state *state);
+static void initializePWMSlices(uint8_t first, uint8_t count, uint8_t intdiv, uint8_t fracdiv);
+static void setPWMSlices(uint8_t first, uint8_t count, uint8_t value);
+static void setPWMPorts(uint8_t first, uint8_t count);
+static void initializeAnalogInput(void);
+static float readAnalogInput();
+static void initializeChannel(channel *channel, uint8_t device);
+static channel* initializeChannels(uint8_t *numChannels);
+static void initializeTrack(track *track, channel *channel, uint16_t *sequence, const uint16_t sequenceLength);
+static track* initializeTracks(uint8_t *numTracks, channel* channels);
+static void readTrack(track *target);
+static void readTracks(const uint8_t numTracks, track *tracks);
+static void playChannels(const uint8_t numChannels, channel *channels, state *state);
+
+static const uint64_t sleepUnit = 512;
+static uint8_t rhythmUnit = 255; // also set dynamically by tracks
+
+const instrument instruments[] =
+{
+    instSilence, instRegular
+};
+
+int main(void)
+{
+    state *state = malloc(sizeof(struct state));
+    composition *composition = malloc(sizeof(struct composition));
+
+    initializePWMSlices(0, 5, 255, 15);
+    setPWMSlices(0, 5, true);
+    setPWMPorts(0, 10);
+
+    // skipping ADC for now
+    //initializeAnalogInput();
+
+    // initialize the channels - device usage & state management
+    composition->channels = initializeChannels(&composition->numChannels);
+    // initialize the tracks - parallel streams of commands to the channels
+    composition->tracks = initializeTracks(&composition->numTracks, composition->channels);
+
+    sleep_ms(500);
+    // giving up on ADC volume for now -
+    // clearly not as straightforward as it was in the atmega,
+    // and it wasn't the right way anyway
+    state->volume = 1.0;
+
+    for(;;)
+    {
+        readTracks(composition->numTracks, composition->tracks);
+        playChannels(composition->numChannels, composition->channels, state);
+        SLEEP_DELAY
+    }
+}
 
 static void instSilence(channel *channel, state *state)
 {
@@ -46,11 +96,6 @@ static void instRegular(channel *channel, state *state)
         }
     }
 }
-
-const instrument instruments[] =
-{
-    instSilence, instRegular
-};
 
 static void initializePWMSlices(uint8_t first, uint8_t count, uint8_t intdiv, uint8_t fracdiv)
 {
@@ -274,36 +319,5 @@ static void playChannels(const uint8_t numChannels, channel *channels, state *st
     for (int i = 0; i < numChannels; i++)
     {
         channels[i].instrument(&channels[i], state);
-    }
-}
-
-int main(void)
-{
-    state *state = malloc(sizeof(struct state));
-    composition *composition = malloc(sizeof(struct composition));
-
-    initializePWMSlices(0, 5, 255, 15);
-    setPWMSlices(0, 5, true);
-    setPWMPorts(0, 10);
-
-    // skipping ADC for now
-    //initializeAnalogInput();
-
-    // initialize the channels - device usage & state management
-    composition->channels = initializeChannels(&composition->numChannels);
-    // initialize the tracks - parallel streams of commands to the channels
-    composition->tracks = initializeTracks(&composition->numTracks, composition->channels);
-
-    sleep_ms(500);
-    // giving up on ADC volume for now -
-    // clearly not as straightforward as it was in the atmega,
-    // and it wasn't the right way anyway
-    state->volume = 1.0;
-
-    for(;;)
-    {
-        readTracks(composition->numTracks, composition->tracks);
-        playChannels(composition->numChannels, composition->channels, state);
-        SLEEP_DELAY
     }
 }
